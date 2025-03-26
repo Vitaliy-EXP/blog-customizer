@@ -1,4 +1,5 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useRef } from 'react';
+import { useOutsideClickClose } from 'src/ui/select/hooks/useOutsideClickClose';
 import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
 import { Select } from 'src/ui/select';
@@ -27,8 +28,15 @@ export const ArticleParamsForm = ({
 	currentState,
 	applyState,
 }: ArticleParamsFormProps) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [formState, setFormState] = useState(currentState);
+	const asideRef = useRef<HTMLDivElement>(null);
+
+	useOutsideClickClose({
+		isOpen: isMenuOpen,
+		rootRef: asideRef,
+		onChange: setIsMenuOpen,
+	});
 
 	const handleChange = (fieldName: keyof ArticleStateType) => {
 		return (option: OptionType) => {
@@ -42,25 +50,29 @@ export const ArticleParamsForm = ({
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		applyState(formState);
-		setIsOpen(false);
+		setIsMenuOpen(false);
 	};
 
 	const handleReset = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setFormState(defaultArticleState);
 		applyState(defaultArticleState);
-		setIsOpen(false);
+		setIsMenuOpen(false);
 	};
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={() => setIsOpen(!isOpen)} />
-			<div
-				className={clsx(styles.overlay, isOpen && styles.overlay_open)}
-				onClick={() => setIsOpen(false)}
+			<ArrowButton
+				isOpen={isMenuOpen}
+				onClick={() => setIsMenuOpen(!isMenuOpen)}
 			/>
-			<aside
-				className={clsx(styles.container, isOpen && styles.container_open)}>
+			<div
+				className={clsx(styles.overlay, isMenuOpen && styles.overlay_open)}
+				onClick={() => setIsMenuOpen(false)}
+			/>
+			<div
+				ref={asideRef}
+				className={clsx(styles.container, isMenuOpen && styles.container_open)}>
 				<form
 					className={styles.form}
 					onSubmit={handleSubmit}
@@ -114,7 +126,7 @@ export const ArticleParamsForm = ({
 						<Button title='Применить' type='apply' htmlType='submit' />
 					</div>
 				</form>
-			</aside>
+			</div>
 		</>
 	);
 };
